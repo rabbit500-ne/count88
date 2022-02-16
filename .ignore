@@ -1,3 +1,3 @@
 /python/mongo/*
-/python/src/__pycache__
-/python/othello_env/*
+/python/src/__pycache__/
+/python/othello_env/
