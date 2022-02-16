@@ -1,0 +1,12 @@
+version: '3'
+services:
+  python3:
+    # コンテナ名
+    container_name: "python3"
+    # 公式イメージから作成
+    image: "python:3"
+    # 起動永続
+    tty: true
+
+    volumes:
+      - ../../:/home

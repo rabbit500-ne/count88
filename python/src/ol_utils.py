@@ -1,4 +1,7 @@
 # coding: UTF-8
+
+import dataclasses
+from enum import Enum
 # import wall
 #**************************************************************
 # define 
@@ -9,6 +12,41 @@ BLACK       = 0
 WHITE       = 1
 
 INIT_BORD = [0x0000001008000000, 0x0000000810000000]
+
+class PLAYER(Enum):
+    black = 0
+    white = 1
+
+class BORD(int):pass
+
+@dataclasses.dataclass
+class BORD_WB():
+    w : BORD = 0
+    b : BORD = 0
+# BORD[0] : black 
+# BORD[1] : white
+
+@dataclasses.dataclass
+class Kif():
+    bord : BORD_WB = BORD_WB()
+    pas : int = 0
+    player : PLAYER = 0
+
+    @property
+    def name(self):
+        return f"{self.bord.b}_{self.bord.w}_{self.pas}_{self.player.value}"
+
+    @name.setter
+    def name(self, s : str):
+        arr = s.split("_")
+        self.bord.b = int(arr[0])
+        self.bord.w = int(arr[1])
+        self.pas = int(arr[2])
+        self.player = PLAYER(int(arr[3]))
+
+
+
+
 
 #**************************************************************
 # Error
@@ -57,12 +95,12 @@ def debug_preview_bord( bord, hand, selected):
     print( "W:0x%016x" % bord[WHITE])
     print( "B:0x%016x" % bord[BLACK])
 
-def search(bord, hand):
+def search(bord : BORD_WB, hand):
     can = 0
-    b_bord = bord[0]
-    w_bord = bord[1]
-    p = b_bord if hand == BLACK else w_bord
-    o = w_bord if hand == BLACK else b_bord
+    b_bord = bord.b
+    w_bord = bord.w
+    p = b_bord if hand == PLAYER.black else w_bord
+    o = w_bord if hand == PLAYER.black else b_bord
     shift = [1, 7, 8, 9]
     masks = [0x7e7e7e7e7e7e7e7e, 
             0x007e7e7e7e7e7e00, 
@@ -186,8 +224,8 @@ def select_hand(can,selected):
 
 
 def reverse(bord, selected, player):
-    o = bord[0] if player == WHITE else bord[1]
-    p = bord[1] if player == WHITE else bord[0]
+    o = bord.b if player == PLAYER.white else bord.w
+    p = bord.w if player == PLAYER.white else bord.b
     pos = 63 - clz(selected)
     flipped = 0
 
@@ -230,16 +268,18 @@ def reverse(bord, selected, player):
     p |= flipped
     p |= (1 << (63 - clz(selected)))
 
-    if player == BLACK :
-        return [p,o]
+    if player == PLAYER.black :
+        return BORD_WB(b=p,w=o)
+            # [p,o]
     else :
-        return [o, p]
+        return BORD_WB(b=o, w=p)
+        # [o, p]
     
 def player_change(player):
-    if player == BLACK:
-        return WHITE
-    if player == WHITE:
-        return BLACK
+    if player == PLAYER.black:
+        return PLAYER.white
+    if player == PLAYER.white:
+        return PLAYER.black
     raise Exception("player ERR")
 
 def clz(  n):
