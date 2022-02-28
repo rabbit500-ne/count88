@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sqlite3
 
 COUNT_BLOCKS = 6
@@ -89,7 +90,7 @@ def main():
     # This is the qmark style:
     cur.execute("insert into lang values (?, ?)", ("C", 1972))
 
-    cur.execute("SELECT * FROM lang WHERE name=?", ("C")) # ? が使えない 次TODO
+    cur.execute("SELECT * FROM lang WHERE name=?", ("C")) 
 
 if __name__ == '__main__':
     db_test = Db_test()

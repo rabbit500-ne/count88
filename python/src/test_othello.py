@@ -1,7 +1,7 @@
 import unittest
 import ol_utils as util
 import ol_count as cot
-import parameterized
+# import parameterized
 
 class TestUnit_ol_utils(unittest.TestCase):
     def test_init(self):
@@ -36,7 +36,11 @@ class TestUnit_ol_utils(unittest.TestCase):
             00000000
             """
         correct_bord= util.ConvStrBordToHex(correct)
-        bord = util.search(util.INIT_BORD, util.BLACK)
+        bord=util.BORD_WB(
+            b=util.INIT_BORD[0],
+            w=util.INIT_BORD[1]
+        )
+        bord = util.search(bord, util.PLAYER.black)
         self.assertEqual(bord,correct_bord)
 
     def test_search_2(self):
@@ -62,7 +66,9 @@ class TestUnit_ol_utils(unittest.TestCase):
             00000001
             00000000
             """
-        ret = util.search(util.ConvStrBordToHexWB(bord),util.BLACK)
+        [b, w] = util.ConvStrBordToHexWB(bord)
+        bord = util.BORD_WB(b=b,w=w)
+        ret = util.search(bord,util.PLAYER.black)
         self.assertEqual(ret,util.ConvStrBordToHex(correct_b))
 
     def test_select_hand(self):
@@ -168,14 +174,16 @@ class TestUnit_ol_utils(unittest.TestCase):
             00000bw0
             0000000w            
             """
-        bord = util.ConvStrBordToHexWB(_bord)
+        [b, w] = util.ConvStrBordToHexWB(_bord)
         selected = util.ConvStrBordToHex(_selected)
-        correct_bord = util.ConvStrBordToHexWB(_correct_bord)
-        ret_bord = util.reverse(bord, selected, util.BLACK)
+        [cb,cw] = util.ConvStrBordToHexWB(_correct_bord)
+        bord = util.BORD_WB(b=b,w=w)
+        ret_bord = util.reverse(bord, selected, util.PLAYER.black)
 
         # util.print_bord(ret_bord[0])
         # util.print_bord(ret_bord[1])
         # util.print_bordWB(correct_bord)
+        correct_bord = util.BORD_WB(b=cb,w=cw)
         self.assertEqual(ret_bord,correct_bord)
 
 
@@ -192,8 +200,9 @@ class Testunit_ol_count( unittest.TestCase ):
             bwbwbwwb
             bwbwwbbb            
             """
-        bord = util.ConvStrBordToHexWB(_bord)
-        count = cot.run_return(bord, util.BLACK)
+        [b, w] = util.ConvStrBordToHexWB(_bord)
+        bord = util.BORD_WB(b=b,w=w)
+        count = cot.run_return(bord, util.PLAYER.black)
         self.assertEqual(count, 1)
         print("-------------")
 
@@ -209,8 +218,9 @@ class Testunit_ol_count( unittest.TestCase ):
             bwbwbwwb
             bwbwwbbb            
             """
-        bord = util.ConvStrBordToHexWB(_bord)
-        count = cot.run_return(bord, util.BLACK)
+        [b, w] = util.ConvStrBordToHexWB(_bord)
+        bord = util.BORD_WB(b=b,w=w)
+        count = cot.run_return(bord, util.PLAYER.black)
         self.assertEqual(count, 2)
 
     def test_run_return_03(self):
@@ -225,8 +235,9 @@ class Testunit_ol_count( unittest.TestCase ):
             bwbwbwwb
             bwbwwbbb            
             """
-        bord = util.ConvStrBordToHexWB(_bord)
-        count = cot.run_return(bord, util.BLACK)
+        [b, w] = util.ConvStrBordToHexWB(_bord)
+        bord = util.BORD_WB(b=b,w=w)
+        count = cot.run_return(bord, util.PLAYER.black)
         self.assertEqual(count, 5)
 
     def test_run_Enumeration(self):
@@ -241,8 +252,13 @@ class Testunit_ol_count( unittest.TestCase ):
             00000000
             00000000
             """
-        bord = util.ConvStrBordToHexWB(_bord)
-        bord_list = cot.run_Enumeration(bord, util.BLACK, 2)
+        [b, w] = util.ConvStrBordToHexWB(_bord)
+        kif = util.Kif(
+            bord=util.BORD_WB(b=b,w=w),
+            pas=0,
+            player=util.PLAYER.black,
+        )
+        bord_list = cot.run_Enumeration(kif, 2)
         self.assertEqual(len(bord_list), 12)
 
 

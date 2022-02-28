@@ -175,11 +175,12 @@ class Tile(dbi):
     def read_chiled_tiles(self):
         cmd = f"SELECT kifu FROM {self.table_name};"
         print(cmd)
-        print("-_0  " +self.kif.name)
-        self.cur.execute(cmd)
+        try:
+            self.cur.execute(cmd)
+        except sqlite3.OperationalError:
+            raise ExceptionChiledOver
         children = self.cur.fetchall()
         child_tile : List(Tile) = []
-        print("-_1  " +self.kif.name)
         for chiled in children:
             kif = util.Kif(
                 bord=BORD_WB(
@@ -194,6 +195,8 @@ class Tile(dbi):
             ch_tile = Tile(self.con)
             ch_tile.kif = kif
             ch_tile.parent = self
+            ch_tile.level = self.level + 1
+            ch_tile.wood = self.wood
             child_tile.append(ch_tile)
         self.__chiled_tiles = child_tile
         print("-_2  " +self.kif.name)
@@ -239,6 +242,8 @@ class Tile(dbi):
     def level(self, level):
         self.__level = level
         # db 操作
+        
+    def update_level(self):
         self.update(self.parent.table_name,"kifu_name",self.kif.name,"level",level)
 
     @property
@@ -249,10 +254,8 @@ class Tile(dbi):
             print(e)
             pass
         cmd = f"SELECT pointer FROM {self.parent.table_name} WHERE kifu='{self.kif.name}';"
-        print(cmd)
         self.cur.execute(cmd)
         r = self.cur.fetchone()
-        print(r)
         self.__pointer = int(r[0])
         return self.__pointer
 
@@ -407,10 +410,15 @@ class Tile(dbi):
 
         return unique_dict
 
+class TopTile(Tile):pass
+
 class Wood(dbi):
+    def __init__(self,con):
+        super().__init__(con)
+        self.__kifu_count = 0
+
     def create(self):
         self.create_param_table()
-        self.__kifu_count = 0
         self.kifu_count_plus(0)
 
     def create_param_table(self):
@@ -512,19 +520,11 @@ class wall():
         return r['kifu']
 
 class wall_reader(wall):
+    def read_wood(self):
+        self.wood = Wood(self.con)
+
     def read(self):
-        # _bord = \
-        #     """
-        #     00000000
-        #     00000000
-        #     00000000
-        #     000bw000
-        #     000wb000
-        #     00000000
-        #     00000000
-        #     00000000
-        #     """
-        # [b,w] = util.ConvStrBordToHexWB(_bord)
+        self.read_wood()
         kif = util.Kif(
             bord = util.BORD_WB(
                 b=0,
@@ -533,30 +533,22 @@ class wall_reader(wall):
             pas=0,
             player=util.PLAYER.black
         )
-        self.target_tile = Tile(self.con) #t0_0_0_0 table
+        self.target_tile = TopTile(self.con) #t0_0_0_0 table
         self.target_tile.kif = kif
+        self.target_tile.level = 0
+        self.target_tile.wood = self.wood
 
         self.target_tile.read_chiled_tiles()
-        print(f"1-->{self.target_tile.table_name}")
-
         self.target_tile = self.target_tile.chiled_tiles[0]
-        print(f"2-->{self.target_tile.table_name}")
 
-        #TODO pointerのread.
-
-        self.target_tile.read_chiled_tiles()
-        print(f"3-->{self.target_tile.table_name}")
-        self.target_tile = self.target_tile.cullent_chiled()
-
-
-        # self.read_tiles()
-        # ALevel 読む
-        # self.redy_tile_0()
-        # BLevel 読む
-        # CLevel 読む
-        # DLevel 読む
-        # ELevel 読む
-        # FLevel 読む   
+        for _ in range(16):
+            try:
+                self.target_tile.read_chiled_tiles()
+                print(f"-->{self.target_tile.table_name}")
+                self.target_tile = self.target_tile.cullent_chiled()
+            except ExceptionChiledOver as e:
+                print(e)
+                
 
 class Wall_if():
     def get_kifu(self):
@@ -592,7 +584,7 @@ class wall_sheeder(wall):
         # self.sheeder_tile_LEVEL_X() #19
 
     def sheeder_tile_LEVEL_0(self):
-        brank_tile =Tile(self.con)
+        brank_tile =TopTile(self.con)
         brank_kif = util.Kif(
             bord= BORD_WB(
                 b=0,

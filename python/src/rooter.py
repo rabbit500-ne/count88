@@ -9,18 +9,20 @@ import wall2 as Wall
 import time
 import ol_count
 
+class ExceptEnd(Exception):pass
+
 class Root():
     def __init__(self):
-        self.wall = Wall.Wall()
+        self.wall = Wall.wall_reader()
         pass
 
     def redy(self):
         # DB にアクセス
-        self.wall.redy()
-        # 注視するテーブルを決める
-        # DBが完成していなかったら作成する。
-
-        pass
+        # DBがすでにあることが前提
+        self.wall.read()
+        self.target_tile = self.wall.target_tile
+        self.next_target_tile = self.next_tile(self.target_tile)
+        self.next_target_tile.create_chiled()
 
     def run(self):
         while True:
@@ -28,9 +30,21 @@ class Root():
             self.__sum_count()
             time.sleep(1)
 
-    def __chk_tile(self) -> bool:
+    def __chk_tile(self):
         # Data Base の関数を使用する。
-        return True
+        pass
+
+    def next_tile(self, tile : Wall.Tile) -> Wall.Tile:
+        if isinstance(tile , Wall.TopTile):
+            raise ExceptEnd("countOver")
+        try:
+            n_tile = tile.parent.chiled_tiles[tile.parent.pointer + 1]
+            return n_tile
+        except IndexError:
+            parent_tile = self.next_tile(tile.parent)
+            if isinstance(parent_tile , Wall.TopTile):
+                raise ExceptEnd("countOver")
+
 
     def __create_tile(self):
         if not self.__chk_tile():return
